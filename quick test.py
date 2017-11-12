@@ -1,12 +1,16 @@
 import numpy
 from PIL import Image,ImageFilter
 
-#Input image
-Img = Image.open("input.jpg")
-Img.show()
+import sys
 
-for w in range(0, 100):
-   for h in range(0, 100):
-       Img.putpixel((w,h), tuple([255,0,0]))
 
-Img.show()
+a = 0
+for x in range (0,3):
+    a = a + 1
+    b = ("Loading" + "." * a)
+    # \r prints a carriage return first, so `b` is printed on top of the previous line.
+    sys.stdout.write('\r'+b)
+    time.sleep(0.5)
+
+
+input("Press the <ENTER> key to exit...")
