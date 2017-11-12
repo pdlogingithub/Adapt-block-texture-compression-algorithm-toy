@@ -1,13 +1,24 @@
+'''
+This program demostrates the core ideal of "ASTC" algorithm
+by yangxiangyun
+2017.11.12
+'''
+
 import numpy
 from PIL import Image,ImageFilter
-import sys
 
+#Input image
 Img = Image.open("input.jpg")
+#Blur the input image for deciding color pallette later,should use per block blur,but just to keep things simple.
 ImgBlur=Img.filter(ImageFilter.BLUR)
 
+#Block size,can be any arbitary integar number,larger block size means smaller file size,when becomes too large,image quality will drops HARD.
 BlockSizeX = 12
 BlockSizeY = 12
+#Same as end points for ASTC,core feature of ASTC,I use fixed size of 2 just to keep things simple.
+PalleteCapicity=2
 
+#Convert image to numpy array for more advanced control and performance
 ImgArray = numpy.arange(Img.width * Img.height * 3, dtype=numpy.uint8).reshape(Img.width, Img.height, 3)
 ImgArrayBlur= numpy.arange(Img.width * Img.height * 3, dtype=numpy.uint8).reshape(Img.width, Img.height, 3)
 
@@ -16,11 +27,11 @@ for w in range(0, Img.width):
         ImgArray[w][h] = Img.getpixel((w, h))
         ImgArrayBlur[w][h] = ImgBlur.getpixel((w, h))
 
+#Calculate block counts 
 BlockCountX = (int)(Img.width / BlockSizeX) if Img.width % BlockSizeX == 0 else (int)(Img.width / BlockSizeX) + 1
 BlockCountY = (int)(Img.height / BlockSizeY) if Img.height % BlockSizeY == 0 else (int)(Img.height / BlockSizeY) + 1
 
 OutputArray=numpy.array([[[[0,0,0],[0,0,0],[[[False,False] for i in range(BlockSizeY)] for i in range(BlockSizeX)]] for i in range(BlockCountX)] for i in range(BlockCountX)])
-print(sys.getsizeof(OutputArray))
 
 for BlockX in range(0, BlockCountX):
     for BlockY in range(0, BlockCountY ):
@@ -80,11 +91,13 @@ for w in range(0, Img.width):
         if OutputArray[BlockX][BlockY][2][PixelX][PixelY] == [True, True]:
             Img.putpixel((w, h), tuple(OutputArray[BlockX][BlockY][1]))
 
-
+			
+import sys
+print(sys.getsizeof(OutputArray))
 
 Img.save("output.jpg")
 
-f=open("D:\\1.b", 'br+')
+f=open("Output.binary", 'br+')
 f.write(bytes(OutputArray))
 
 
