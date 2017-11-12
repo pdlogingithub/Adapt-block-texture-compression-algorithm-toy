@@ -19,7 +19,7 @@ BlockSizeY = 12
 # same as end points for ASTC,core feature of ASTC,I use fixed size of 2 just to keep things simple.
 PalleteCapacity=2
 
-debug_showblock = False
+debug_showblock = True
 
 # -----------------------------------------------------------------------------------
 
@@ -71,8 +71,8 @@ for BlockX in range(0, BlockCountX):
                         # if two pixels' different is greater than before,use these two color as pallete colors.
                         if ColorDistance < NewColorDistance:
                             ColorDistance = NewColorDistance
-                            ColorA=ImgArray[X1][Y1]
-                            ColorB=ImgArray[X2][Y2]
+                            ColorA = ImgArray[X1][Y1]
+                            ColorB = ImgArray[X2][Y2]
         # put pallete colors to output
         OutputArray[BlockX][BlockY][0] = ColorA
         OutputArray[BlockX][BlockY][1] = ColorB
@@ -83,21 +83,27 @@ for BlockX in range(0, BlockCountX):
                 if X > Img.width - 1 or Y > Img.height - 1:
                     continue
                 # each pixel has 2 bit weights,so it can be one of 4 colors in between two palletes colors.
-                ColorOffsetA = [(int)(ImgArray[X][Y][i]) - (int)(ColorA[i]) for i in range(3)]
-                ColorOffsetB = [(int)(ImgArray[X][Y][i]) - (int)(ColorB[i]) for i in range(3)]
-                ColorDistanceA = (ColorOffsetA[0] ** 2 + ColorOffsetA[1] ** 2 + ColorOffsetA[2]**2) ** 0.5
-                ColorDistanceB = (ColorOffsetB[0] ** 2 + ColorOffsetB[1] ** 2 + ColorOffsetB[2]**2) ** 0.5
-                ColorWeight=ColorDistanceA/(ColorDistanceA+ColorDistanceB)
-                if 0.0 < ColorWeight < 1/6:
+                ColorOffsetAC = numpy.array([(int)(ImgArray[X][Y][i]) - (int)(ColorA[i]) for i in range(3)])
+                ColorOffsetAB = numpy.array([(int)(ColorB[i]) - (int)(ColorA[i]) for i in range(3)])
+                ColorDistanceAC = numpy.sqrt(numpy.square(ColorOffsetAC).sum())
+                ColorDistanceAB = numpy.sqrt(numpy.square(ColorOffsetAB).sum())
+                if ColorDistanceAC == 0 or ColorDistanceAB == 0:
+                    ColorWeight = 0
+                else:
+                    ColorOffsetAC = ColorOffsetAC / ColorDistanceAC
+                    ColorOffsetAB = ColorOffsetAB / ColorDistanceAB
+                    print(ColorOffsetAC)
+                    ColorWeight=ColorDistanceAC*numpy.dot(ColorOffsetAC,ColorOffsetAB)/ColorDistanceAB
+                if 0.0 <= ColorWeight < 1/6:
                     ColorWeight=0
                     OutputArray[BlockX][BlockY][2][PixelX][PixelY]=[False,False]
-                elif 1/6 < ColorWeight < 3/6:
+                elif 1/6 <= ColorWeight < 3/6:
                     ColorWeight=1/3
                     OutputArray[BlockX][BlockY][2][PixelX][PixelY]=[False,True]
-                elif 3/6 < ColorWeight < 5/6:
+                elif 3/6 <= ColorWeight < 5/6:
                     ColorWeight=2/3
                     OutputArray[BlockX][BlockY][2][PixelX][PixelY]=[True,False]
-                elif 5/6 < ColorWeight < 1:
+                elif 5/6 <= ColorWeight <= 1:
                     ColorWeight=1
                     OutputArray[BlockX][BlockY][2][PixelX][PixelY]=[True,True]
                 # debug
@@ -105,7 +111,7 @@ for BlockX in range(0, BlockCountX):
                     if PixelX == 0 or BlockY==0:
                         UnPackColor = [255, 0, 0]
                     else:
-                        UnPackColor = OutputArray[BlockX][BlockY][0] * ColorWeight + OutputArray[BlockX][BlockY][1] * (1 - ColorWeight)
+                        UnPackColor = OutputArray[BlockX][BlockY][0] * ColorWeight + OutputArray[BlockX][BlockY][1] * (1.0 - ColorWeight)
                         Img.putpixel((X,Y), tuple((int)(UnPackColor[i]) for i in range(3)))
         # debug
         if debug_showblock:
@@ -121,10 +127,10 @@ for w in range(0, Img.width):
         if OutputArray[BlockX][BlockY][2][PixelX][PixelY]==[False,False]:
             Img.putpixel((w,h), tuple( OutputArray[BlockX][BlockY][0]))
         if OutputArray[BlockX][BlockY][2][PixelX][PixelY] == [False, True]:
-            UnPackColor=OutputArray[BlockX][BlockY][0]*2/3+OutputArray[BlockX][BlockY][1]*1/3
+            UnPackColor=OutputArray[BlockX][BlockY][0]*(2/3)+OutputArray[BlockX][BlockY][1]*(1/3)
             Img.putpixel((w,h), tuple((int)(UnPackColor[i]) for i in range(3)))
         if OutputArray[BlockX][BlockY][2][PixelX][PixelY] == [True, False]:
-            UnPackColor = OutputArray[BlockX][BlockY][0] * 1/3 + OutputArray[BlockX][BlockY][1] * 2/3
+            UnPackColor = OutputArray[BlockX][BlockY][0] * (1/3) + OutputArray[BlockX][BlockY][1] * (2/3)
             Img.putpixel((w, h), tuple((int)(UnPackColor[i]) for i in range(3)))
         if OutputArray[BlockX][BlockY][2][PixelX][PixelY] == [True, True]:
             Img.putpixel((w, h), tuple(OutputArray[BlockX][BlockY][1]))
