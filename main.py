@@ -7,9 +7,8 @@ by yangxiangyun
 import numpy
 from PIL import Image,ImageFilter
 import sys
+import os
 import time
-
-print("Preparing...")
 
 # input image
 Img = Image.open("input.png")
@@ -19,6 +18,7 @@ ImgBlur=Img.filter(ImageFilter.BLUR)
 print("Image format:",Img.format)
 print("Image mode:",Img.mode)
 print("Image size:",Img.size)
+print("Preparing...")
 
 # block size,can be any arbitary integar number,larger block size means smaller file size,
 # when becomes too large,image quality will drops HARD.
@@ -27,7 +27,8 @@ BlockSizeY = 12
 # same as end points for ASTC,core feature of ASTC,I use fixed size of 2 just to keep things simple.
 PalleteCapacity=2
 
-debug_showblock = True
+# enable debug will cause program to crush if image is too large,because save file function sometime just throw error.
+debug_showblock = False
 
 # convert image to numpy array for more advanced control and performance
 ImgArray = numpy.arange(Img.width * Img.height * 3, dtype=numpy.uint8).reshape(Img.width, Img.height, 3)
@@ -124,7 +125,8 @@ for BlockX in range(0, BlockCountX):
                     Img.putpixel((X,Y), tuple((int)(UnPackColor[i]) for i in range(3)))
         # debug
         if debug_showblock:
-            Img.save("debug_view.jpg")
+            if os.access("debug_view.jpg", os.R_OK):
+                Img.save("debug_view.jpg")
             for PixelX in range(0, BlockSizeX ):
                 for PixelY in range(0, BlockSizeY):
                     X = BlockX * BlockSizeX + PixelX
@@ -188,7 +190,7 @@ EndTime=time.asctime(time.localtime(time.time()))
 print(" ")
 print("Complete")
 print(" ")
-print("Final raw size:",BlockCountX*BlockCountY*(BlockSizeX*BlockSizeY*2+24)/8/1024/1024,"in KB")
+print("Final raw size:",BlockCountX*BlockCountY*(BlockSizeX*BlockSizeY*2+24)/8/1024,"in KB")
 print("Start time:",StartTime)
 print("End time:",EndTime)
 input("Press the <ENTER> key to exit...")
