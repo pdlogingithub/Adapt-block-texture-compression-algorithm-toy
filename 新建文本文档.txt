@@ -1,1 +1,4 @@
 bug fix
+one color block turned out completely black
+color weight precision
+pellatte color from blur image
