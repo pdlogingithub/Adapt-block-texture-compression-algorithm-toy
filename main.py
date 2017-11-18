@@ -28,7 +28,7 @@ BlockSizeY = 12
 PalleteCapacity=2
 
 # enable debug will cause program to crush if image is too large,because save file function sometime just throw error.
-debug_showblock = False
+debug_showblock = True
 
 # convert image to numpy array for more advanced control and performance
 ImgArray = numpy.arange(Img.width * Img.height * 3, dtype=numpy.uint8).reshape(Img.width, Img.height, 3)
